@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
 
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -35,6 +36,25 @@ public class User {
     @ElementCollection(fetch = FetchType.EAGER)
     private Set<String> roles;
 
+    @OneToMany
+    private Set<Course> courses;
+
+    @ManyToMany
+    @JoinTable(
+            name = "user_started_courses",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "course_id")
+    )
+    private List<Course> startedCourses;
+
+    @ManyToMany
+    @JoinTable(
+            name = "user_completed_courses",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "course_id")
+    )
+    private List<Course> completedCourses;
+
 
     public String getFullName() {
         return firstName + " " + lastName;
@@ -55,6 +75,15 @@ public class User {
 
     public boolean hasRole(String role) {
         return roles.contains(role);
+    }
+
+    public void addStartedCourse(Course course) {
+        startedCourses.add(course);
+    }
+
+    public void addCompletedCourse(Course course) {
+        startedCourses.remove(course);
+        completedCourses.add(course);
     }
 }
 
