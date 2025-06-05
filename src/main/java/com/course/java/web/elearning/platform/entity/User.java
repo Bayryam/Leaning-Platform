@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -55,6 +56,8 @@ public class User {
     )
     private List<Course> completedCourses;
 
+    @OneToMany(mappedBy = "issuedTo", cascade = CascadeType.ALL)
+    private List<Certificate> certificates;
 
     public String getFullName() {
         return firstName + " " + lastName;
@@ -67,6 +70,13 @@ public class User {
         this.lastName = lastName;
         this.email = email;
         this.roles = roles;
+        this.certificates = new ArrayList<>();
+        this.startedCourses = new ArrayList<>();
+        this.completedCourses = new ArrayList<>();
+    }
+
+    public void addCertificate(Certificate certificate) {
+        certificates.add(certificate);
     }
 
     public boolean isAdmin() {
