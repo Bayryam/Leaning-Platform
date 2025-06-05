@@ -42,6 +42,9 @@ public class Course {
     private List<User> studentsCompletedCourse;
 
     @OneToMany
+    private List<Lesson> lessons;
+
+    @OneToMany
     private List<Question> questions;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
@@ -64,5 +67,12 @@ public class Course {
 
     public void addCategory(String category) {
         categories.add(category);
+    }
+
+    public Lesson getLessonById(Long lessonId) {
+        return lessons.stream()
+                .filter(lesson -> lesson.getId().equals(lessonId))
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException("Lesson not found with ID: " + lessonId));
     }
 }
