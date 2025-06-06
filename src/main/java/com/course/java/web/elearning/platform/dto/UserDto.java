@@ -1,5 +1,6 @@
 package com.course.java.web.elearning.platform.dto;
 
+import com.course.java.web.elearning.platform.entity.Group;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -31,4 +32,6 @@ public class UserDto {
     private Set<String> roles;
 
     private ImageDto profilePicture;
+
+    private Set<Group> groups;
 }
