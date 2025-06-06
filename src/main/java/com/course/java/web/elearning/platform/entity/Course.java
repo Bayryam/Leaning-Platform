@@ -64,6 +64,9 @@ public class Course {
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Assignment> assignments = new ArrayList<>();
 
+    @OneToOne
+    private CourseAnalytics analytics;
+
     public void addTicket(Ticket ticket) {
         tickets.add(ticket);
     }
