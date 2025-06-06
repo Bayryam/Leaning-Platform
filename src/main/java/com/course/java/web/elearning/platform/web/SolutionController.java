@@ -1,0 +1,42 @@
+package com.course.java.web.elearning.platform.web;
+
+import com.course.java.web.elearning.platform.entity.Solution;
+import com.course.java.web.elearning.platform.security.CustomUserDetails;
+import com.course.java.web.elearning.platform.service.ActivityLogService;
+import com.course.java.web.elearning.platform.service.SolutionService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/solutions")
+public class SolutionController {
+
+    private final SolutionService solutionService;
+    private final ActivityLogService activityLogService;
+
+    @Autowired
+    public SolutionController(SolutionService solutionService, ActivityLogService activityLogService) {
+        this.solutionService = solutionService;
+        this.activityLogService = activityLogService;
+    }
+
+    @PostMapping
+    public Solution uploadSolution(@RequestBody Solution solution) {
+        activityLogService.logActivity("Solution uploaded", solution.getUser().getUsername());
+        return solutionService.saveSolution(solution);
+    }
+
+    @GetMapping("/assignment/{assignmentId}")
+    public List<Solution> getSolutionsByAssignmentId(@PathVariable Long assignmentId) {
+        return solutionService.getSolutionsByAssignmentId(assignmentId);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteSolution(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        solutionService.deleteSolution(id);
+        activityLogService.logActivity("Solution deleted", userDetails.getUsername());
+    }
+}
