@@ -29,4 +29,6 @@ public class UserDto {
     private String email;
 
     private Set<String> roles;
+
+    private ImageDto profilePicture;
 }

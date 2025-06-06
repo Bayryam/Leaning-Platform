@@ -19,4 +19,5 @@ public class News {
     private String content;
     private String author;
     private LocalDateTime publishedDate;
+    private String image;
 }
