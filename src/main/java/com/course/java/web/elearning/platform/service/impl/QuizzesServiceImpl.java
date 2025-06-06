@@ -26,7 +26,6 @@ public class QuizzesServiceImpl implements QuizzesService {
     private final UserService userService;
     private final CourseService courseService;
 
-
     @Autowired
     public QuizzesServiceImpl(QuizRepository quizRepository,
                           UserService userService,

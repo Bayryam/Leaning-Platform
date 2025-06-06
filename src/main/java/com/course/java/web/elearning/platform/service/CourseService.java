@@ -2,7 +2,11 @@ package com.course.java.web.elearning.platform.service;
 
 import com.course.java.web.elearning.platform.dto.CourseDto;
 import com.course.java.web.elearning.platform.dto.QuestionDto;
-import com.course.java.web.elearning.platform.entity.*;
+import com.course.java.web.elearning.platform.entity.Course;
+import com.course.java.web.elearning.platform.entity.Question;
+import com.course.java.web.elearning.platform.entity.StudentResult;
+import com.course.java.web.elearning.platform.entity.User;
+import com.course.java.web.elearning.platform.entity.Quiz;
 import com.course.java.web.elearning.platform.wrapper.QuestionWrapper;
 import jakarta.transaction.Transactional;
 
@@ -22,6 +26,8 @@ public interface CourseService {
     List<Course> getAllCoursesByUser(User user);
 
     Course getCourseById(Long id);
+
+    boolean areAllLessonsCompletedByUser(User user, Course course);
 
     Long getCourseQuizId(long courseId);
 

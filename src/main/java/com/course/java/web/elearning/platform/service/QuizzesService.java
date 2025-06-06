@@ -1,6 +1,7 @@
 package com.course.java.web.elearning.platform.service;
 
 import com.course.java.web.elearning.platform.dto.QuizDto;
+import com.course.java.web.elearning.platform.entity.Course;
 import com.course.java.web.elearning.platform.entity.Question;
 import com.course.java.web.elearning.platform.entity.Quiz;
 import com.course.java.web.elearning.platform.exception.EntityNotFoundException;
@@ -20,4 +21,7 @@ public interface QuizzesService {
     void deleteQuestionFromQuiz(long quizId, Question question);
 
     Quiz getQuizForQuestion(long id);
+
+    Course addQuizToCourse(long courseId, QuizDto quizDto);
+
 }

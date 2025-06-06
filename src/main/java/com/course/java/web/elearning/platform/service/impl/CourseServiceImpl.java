@@ -11,12 +11,11 @@ import com.course.java.web.elearning.platform.repository.CourseRepository;
 import com.course.java.web.elearning.platform.repository.QuestionRepository;
 import com.course.java.web.elearning.platform.repository.StudentResultRepository;
 import com.course.java.web.elearning.platform.repository.UserRepository;
-import com.course.java.web.elearning.platform.service.CourseService;
-import com.course.java.web.elearning.platform.service.UserService;
+import com.course.java.web.elearning.platform.service.*;
 import com.course.java.web.elearning.platform.wrapper.QuestionWrapper;
 import jakarta.persistence.EntityManager;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.transaction.Transactional;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -31,7 +30,10 @@ import java.util.stream.Collectors;
 public class CourseServiceImpl implements CourseService {
     private final CourseRepository courseRepository;
     private final QuestionRepository questionRepository;
+    private final ImageService imageService;
+    private final CertificateService certificateService;
     private final StudentResultRepository studentResultRepository;
+    private final AnalyticsService analyticsService;
     private final EntityManager entityManager;
     private final UserRepository userRepository;
     private final UserService userService;
@@ -40,13 +42,17 @@ public class CourseServiceImpl implements CourseService {
     @Autowired
     public CourseServiceImpl(CourseRepository courseRepository,
                              QuestionRepository questionRepository,
+                             ImageService imageService,
+                             CertificateService certificateService,
                              StudentResultRepository studentResultRepository,
-                             EntityManager entityManager,
-                             UserRepository userRepository,
-                             UserService userService) {
+                             AnalyticsService analyticsService,
+                             EntityManager entityManager, UserRepository userRepository, UserService userService) {
         this.courseRepository = courseRepository;
         this.questionRepository = questionRepository;
+        this.imageService = imageService;
+        this.certificateService = certificateService;
         this.studentResultRepository = studentResultRepository;
+        this.analyticsService = analyticsService;
         this.entityManager = entityManager;
         this.userRepository = userRepository;
         this.userService = userService;
@@ -61,13 +67,21 @@ public class CourseServiceImpl implements CourseService {
                     courseDto.getName()));
         }
 
-        Course course = CourseDtoToCourseMapper.mapCourseDtoToCourse(courseDto, user);
+        Course course = CourseDtoToCourseMapper.mapCourseDtoToCourse(courseDto, user, imageService);
+        course.setAnalytics(analyticsService.addAnalytics(new CourseAnalytics()));
         return courseRepository.save(course);
     }
 
     @Override
     public Map<String, Set<Course>> getCoursesGroupedByCategory() {
-        final List<Course> allCourses = courseRepository.findAll();
+        List<Course> allCourses = courseRepository.findAll();
+        allCourses = allCourses.stream().peek(course -> {
+                    Image image = course.getImage();
+                    if (image != null) {
+                        course.setImageBase64(image.parseImage());
+                    }
+                })
+                .toList();
 
         return allCourses.stream()
                 .flatMap(course -> course.getCategories().stream()
@@ -76,33 +90,71 @@ public class CourseServiceImpl implements CourseService {
                         AbstractMap.SimpleEntry::getKey,
                         Collectors.mapping(
                                 AbstractMap.SimpleEntry::getValue,
-                                Collectors.toSet()
+                                Collectors.toSet()  // Use Set to avoid duplicates
                         )
                 ));
     }
 
     @Override
     public List<Course> getCoursesByCategory(String category) {
-        return courseRepository.findAllByCategory(category);
+        List<Course> courses = courseRepository.findAllByCategory(category);
+        return courses.stream().peek(course -> {
+                    Image image = course.getImage();
+                    if (image != null) {
+                        course.setImageBase64(image.parseImage());
+                    }
+                })
+                .toList();
     }
 
     @Override
     public List<Course> getAllInProgressCoursesByUser(Long id) {
         List<Course> completedCourses = findCompletedCoursesByUserId(id);
         return userRepository.findStartedCoursesByUserId(id).stream()
-                .filter(course -> !completedCourses.contains(course))
+                .peek(course -> {
+                    Image image = course.getImage();
+                    if (image != null) {
+                        course.setImageBase64(image.parseImage());
+                    }
+                })
+                .filter(course -> !completedCourses.contains(course)) // Remove completed courses
                 .toList();
     }
 
     @Override
     public List<Course> getAllCoursesByUser(User user) {
-        return courseRepository.findAllByCreatedBy(user);
+        return courseRepository.findAllByCreatedBy(user).stream().peek(course -> {
+                    Image image = course.getImage();
+                    if (image != null) {
+                        course.setImageBase64(image.parseImage());
+                    }
+                })
+                .toList();
     }
 
     @Override
     public Course getCourseById(Long id) {
-        return courseRepository.findById(id)
+        Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("There is no such course!"));
+        Image image = course.getImage();
+        if (image != null) {
+            course.setImageBase64(image.parseImage());
+        }
+        return course;
+    }
+
+    @Override
+    public boolean areAllLessonsCompletedByUser(User user, Course course) {
+        Set<Lesson> completedLessons = user.getCompletedLessons();
+        List<Lesson> courseLessons = course.getLessons();
+
+        for (Lesson lesson : courseLessons) {
+            if (!completedLessons.contains(lesson)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     @Override
@@ -184,7 +236,13 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public List<Course> getAllCourses() {
-        return courseRepository.findAll();
+        return courseRepository.findAll().stream()
+                .peek(course -> {
+                    Image image = course.getImage();
+                    if (image != null) {
+                        course.setImageBase64(image.parseImage());
+                    }
+                }).toList();
     }
 
     @Override
@@ -200,6 +258,7 @@ public class CourseServiceImpl implements CourseService {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("User not found"));
         Course course = getCourseById(courseId);
         if (percentage >= 80) {
+            certificateService.issueCertificate(username, course, percentage);
             course.addStudentCompletedCourse(user);
             Course savedCourse = save(course);
             user.addCompletedCourse(savedCourse);
@@ -214,6 +273,7 @@ public class CourseServiceImpl implements CourseService {
             var studentResult = studentResultRepository.save(sResult);
             course.getHighScores().add(studentResult);
             courseRepository.save(course);
+            analyticsService.addNewParticipantAnalytics(course, studentResult, course.getHighScores());
             return;
         }
 
@@ -229,6 +289,7 @@ public class CourseServiceImpl implements CourseService {
             course.getHighScores().removeIf(score -> score.getId().equals(updatedResult.getId()));
             course.getHighScores().add(updatedResult);
             courseRepository.save(course);
+            analyticsService.addNewHighScoreInAnalytics(course, updatedResult, course.getHighScores());
         }
     }
 
@@ -259,7 +320,13 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public List<Course> findCompletedCoursesByUserId(Long id) {
-        return userRepository.findCompletedCoursesByUserId(id);
+        return userRepository.findCompletedCoursesByUserId(id).stream()
+                .peek(course -> {
+                    Image image = course.getImage();
+                    if (image != null) {
+                        course.setImageBase64(image.parseImage());
+                    }
+                }).toList();
     }
 
     @Override
