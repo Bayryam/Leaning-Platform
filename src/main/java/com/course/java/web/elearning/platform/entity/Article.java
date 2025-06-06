@@ -1,6 +1,11 @@
 package com.course.java.web.elearning.platform.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,4 +31,8 @@ public class Article {
     private LocalDateTime createdAt;
 
     private String content;
+
+    @ManyToOne
+    @JoinColumn(name = "group_id")
+    private Group group;
 }
