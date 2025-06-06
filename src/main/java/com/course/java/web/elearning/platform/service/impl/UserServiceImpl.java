@@ -1,15 +1,24 @@
 package com.course.java.web.elearning.platform.service.impl;
 
+import com.course.java.web.elearning.platform.dto.ImageDto;
 import com.course.java.web.elearning.platform.dto.UserDto;
+import com.course.java.web.elearning.platform.entity.Course;
+import com.course.java.web.elearning.platform.entity.Image;
 import com.course.java.web.elearning.platform.entity.User;
 import com.course.java.web.elearning.platform.exception.DuplicateEmailException;
 import com.course.java.web.elearning.platform.exception.DuplicateUsernameException;
 import com.course.java.web.elearning.platform.exception.EntityNotFoundException;
+import com.course.java.web.elearning.platform.repository.CourseRepository;
 import com.course.java.web.elearning.platform.repository.UserRepository;
 import com.course.java.web.elearning.platform.security.Role;
+import com.course.java.web.elearning.platform.service.ImageService;
 import com.course.java.web.elearning.platform.service.UserService;
-import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -17,10 +26,21 @@ import java.util.List;
 import java.util.Set;
 
 @Service
-@AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final CourseRepository courseRepository;
+    private final ImageService imageService;
+    private final BCryptPasswordEncoder passwordEncoder;
+
+    @Autowired
+    public UserServiceImpl(UserRepository userRepository, CourseRepository courseRepository,
+                           BCryptPasswordEncoder passwordEncoder, ImageService imageService) {
+        this.userRepository = userRepository;
+        this.courseRepository = courseRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.imageService = imageService;
+    }
 
     @Override
     public User createUser(UserDto userDto) {
@@ -32,19 +52,29 @@ public class UserServiceImpl implements UserService {
             throw new DuplicateEmailException(userDto.getEmail());
         }
 
-        final User userForCreate = buildUser(userDto);
+        User userForCreate = buildUser(userDto);
         return userRepository.save(userForCreate);
     }
 
     @Override
     public User updateUser(User user) {
         userRepository.findById(user.getId())
-                .orElseThrow(() -> new EntityNotFoundException(String.format("User with ID = '%d' not found", user.getId())));
+                .orElseThrow(() -> new EntityNotFoundException(String.format("Post with ID = '%d' not found", user.getId())));
         return userRepository.save(user);
     }
 
     @Override
     public void deleteUser(User user) {
+        User deletedUser = userRepository.findByUsername("deletedUser")
+                .orElseThrow(() -> new IllegalStateException("'Deleted User' not found. Please seed it."));
+
+        List<Course> courses = courseRepository.findAllByCreatedBy(user);
+        for (Course course : courses) {
+            course.setCreatedBy(deletedUser);
+        }
+
+        courseRepository.saveAll(courses);
+
         userRepository.delete(user);
     }
 
@@ -63,10 +93,20 @@ public class UserServiceImpl implements UserService {
         return userRepository.findAll();
     }
 
+    @Override
+    public List<User> getAllUsersExcept(List<String> users) {
+        return userRepository.findAllByUsernameNotIn(users);
+    }
+
+    @Override
+    public List<User> getAllUsersByRole(Role role) {
+        return null;
+    }
+
     private User buildUser(UserDto userDto) {
         User user = new User();
         user.setEmail(userDto.getEmail());
-        //user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
 
         if (userDto.getRoles() == null || userDto.getRoles().isEmpty()) {
             user.setRoles(Set.of(Role.STUDENT.getDescription()));
@@ -77,6 +117,12 @@ public class UserServiceImpl implements UserService {
         user.setUsername(userDto.getUsername());
         user.setFirstName(userDto.getFirstName());
         user.setLastName(userDto.getLastName());
+
+        ImageDto imageDto = userDto.getProfilePicture();
+        if (imageDto != null && imageDto.getImage() != null && !imageDto.getImage().isEmpty()) {
+            Image savedImage = imageService.createImage(imageDto);
+            user.setProfilePicture(savedImage);
+        }
 
         return user;
     }
@@ -103,6 +149,11 @@ public class UserServiceImpl implements UserService {
             case "role":
                 existingUser.setRoles(new HashSet<>(List.of((String) value)));
                 break;
+            case "profilePicture":
+                ImageDto imageDto = (ImageDto) value;
+                Image savedImage = imageService.createImage(imageDto);
+                existingUser.setProfilePicture(savedImage);
+                break;
             default:
                 throw new IllegalArgumentException("Invalid user detail: " + detail);
         }
@@ -111,7 +162,47 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public User addStartedCourse(User user, Course course) {
+        user.addStartedCourse(course);
+        return userRepository.save(user);
+    }
+
+    @Override
+    public User addCompletedCourse(User user, Course course) {
+        user.addCompletedCourse(course);
+        return userRepository.save(user);
+    }
+
+    @Override
+    public User findByIdWithCompletedLessons(Long id) {
+        return userRepository.findByIdWithCompletedLessons(id)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
+    @Override
     public void save(User user) {
         userRepository.save(user);
+    }
+
+    @Override
+    public Page<User> getAllUsers(int page, int size, String loggedInUsername) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        return userRepository.findAllByUsernameNotIn(List.of("deletedUser", loggedInUsername, "admin"), pageable);
+    }
+
+    @Override
+    public Page<User> searchUsers(String searchQuery, int page, int size, String loggedInUsername) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+
+        if (searchQuery.contains(" ")) {
+            String[] nameParts = searchQuery.split("\\s+", 2);
+            String firstNameQuery = nameParts[0];
+            String lastNameQuery = nameParts[1];
+
+            return userRepository.findByFirstNameContainingIgnoreCaseAndLastNameContainingIgnoreCaseAndUsernameNotIn(
+                    firstNameQuery, lastNameQuery, List.of(loggedInUsername, "admin"), pageable);
+        }
+
+        return userRepository.searchUsersExcluding(searchQuery, List.of(loggedInUsername, "deletedUser", "admin"), pageable);
     }
 }

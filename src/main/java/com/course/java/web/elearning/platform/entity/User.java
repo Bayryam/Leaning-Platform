@@ -1,5 +1,6 @@
 package com.course.java.web.elearning.platform.entity;
 
+import com.course.java.web.elearning.platform.security.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
