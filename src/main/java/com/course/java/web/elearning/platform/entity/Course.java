@@ -1,11 +1,13 @@
 package com.course.java.web.elearning.platform.entity;
 
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -32,9 +34,6 @@ public class Course {
     private User createdBy;
     private Date createdOn;
 
-    @Transient
-    private String imageBase64;
-
     @ManyToMany(mappedBy = "startedCourses")
     private List<User> participants;
 
@@ -52,6 +51,15 @@ public class Course {
 
     @ManyToMany(cascade = CascadeType.ALL)
     private List<StudentResult> highScores;
+    @OneToMany(mappedBy = "forCourse")
+    private List<Ticket> tickets;
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Assignment> assignments = new ArrayList<>();
+
+    public void addTicket(Ticket ticket) {
+        tickets.add(ticket);
+    }
 
     public void addParticipant(User user) {
         participants.add(user);
