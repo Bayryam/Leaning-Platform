@@ -23,6 +23,9 @@ public class CourseDto {
     @Size(min = 5, max = 1000, message = "Description must be between 3 and 1000 characters")
     private String description;
 
+    @NotNull(message = "Image URL is required!")
+    private ImageDto image;
+
     @NotEmpty(message = "At least one category should be added")
     private List<String> categories;
 }

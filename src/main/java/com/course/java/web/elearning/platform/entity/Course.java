@@ -34,6 +34,13 @@ public class Course {
     private User createdBy;
     private Date createdOn;
 
+    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "image_id")
+    private Image image;
+
+    @Transient
+    private String imageBase64;
+
     @ManyToMany(mappedBy = "startedCourses")
     private List<User> participants;
 
@@ -49,7 +56,7 @@ public class Course {
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private Quiz quiz;
 
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany(cascade = CascadeType.ALL) // Ensures cascading behavior for highScores
     private List<StudentResult> highScores;
     @OneToMany(mappedBy = "forCourse")
     private List<Ticket> tickets;
