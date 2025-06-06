@@ -9,6 +9,7 @@ import com.course.java.web.elearning.platform.service.AnnouncementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -23,10 +24,23 @@ public class AnnouncementServiceImpl implements AnnouncementService {
         this.announcementRepository = announcementRepository;
     }
 
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<String> getAllActiveAnnouncementsAsStrings() {
+        return (List<String>) getAllActiveAnnouncements(true);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<Announcement> getAllActiveAnnouncements() {
+        return (List<Announcement>) getAllActiveAnnouncements(false);
+    }
+
     @Override
     public Announcement addAnnouncement(AnnouncementDto announcement) {
-        final List<Announcement> allAnnouncements = announcementRepository.findAll();
-        final List<Announcement> activeAnnouncements = allAnnouncements.stream()
+        List<Announcement> allAnnouncements = announcementRepository.findAll();
+        List<Announcement> activeAnnouncements = allAnnouncements.stream()
                 .filter(Announcement::isActive)
                 .toList();
 
@@ -37,7 +51,7 @@ public class AnnouncementServiceImpl implements AnnouncementService {
             throw new MaximumAnnouncementsException("Maximum announcements reached! You can add up to 5 announcements!");
         }
 
-        final Announcement announcementToAdd = AnnouncementDtoToAnnouncementMapper.mapArticleDtoToArticle(announcement);
+        Announcement announcementToAdd = AnnouncementDtoToAnnouncementMapper.mapArticleDtoToArticle(announcement);
         return announcementRepository.save(announcementToAdd);
     }
 
@@ -46,10 +60,22 @@ public class AnnouncementServiceImpl implements AnnouncementService {
         announcementRepository.deleteById(id);
     }
 
-    public List<Announcement> getAllActiveAnnouncements() {
-        final List<Announcement> allAnnouncements = announcementRepository.findAll();
-        return allAnnouncements.stream()
+    private List<?> getAllActiveAnnouncements(boolean asStrings) {
+        List<Announcement> allAnnouncements = announcementRepository.findAll();
+        List<Announcement> activeAnnouncements = allAnnouncements.stream()
                 .filter(Announcement::isActive)
                 .toList();
+
+        allAnnouncements.removeAll(activeAnnouncements);
+        announcementRepository.deleteAll(allAnnouncements);
+
+        if (asStrings) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+            return activeAnnouncements.stream().map(announcement ->
+                            String.format("%s: %s! Available until: %s!", announcement.getTitle(), announcement.getContent(), announcement.getExpiresAt().format(formatter)))
+                    .toList();
+        } else {
+            return activeAnnouncements;
+        }
     }
 }

@@ -6,6 +6,7 @@ import com.course.java.web.elearning.platform.entity.Announcement;
 import java.util.List;
 
 public interface AnnouncementService {
+  List<String> getAllActiveAnnouncementsAsStrings();
   List<Announcement> getAllActiveAnnouncements();
   Announcement addAnnouncement(AnnouncementDto announcement);
   void deleteAnnouncement(Long id);
