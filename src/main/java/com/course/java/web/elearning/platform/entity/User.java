@@ -1,11 +1,10 @@
 package com.course.java.web.elearning.platform.entity;
 
-import com.course.java.web.elearning.platform.security.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -14,7 +13,7 @@ import java.util.Set;
 @NoArgsConstructor(force = true)
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString
+@ToString(exclude = {"courses", "startedCourses", "completedCourses", "tickets", "completedLessons", "certificates"})
 public class User {
 
     public static final String ROLE_STUDENT = "STUDENT";
@@ -37,6 +36,11 @@ public class User {
     @ElementCollection(fetch = FetchType.EAGER)
     private Set<String> roles;
 
+
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
+
     @OneToMany
     private Set<Course> courses;
 
@@ -56,35 +60,26 @@ public class User {
     )
     private List<Course> completedCourses;
 
+    @OneToMany(mappedBy = "issuer")
+    private List<Ticket> tickets;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_completed_lessons",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "lesson_id")
+    )
+    private Set<Lesson> completedLessons = new HashSet<>();
+
     @OneToMany(mappedBy = "issuedTo", cascade = CascadeType.ALL)
     private List<Certificate> certificates;
-
-    public String getFullName() {
-        return firstName + " " + lastName;
-    }
-
-    public User(String username, String password, String firstName, String lastName, String email, @NonNull Set<String> roles) {
-        this.username = username;
-        this.password = password;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-        this.roles = roles;
-        this.certificates = new ArrayList<>();
-        this.startedCourses = new ArrayList<>();
-        this.completedCourses = new ArrayList<>();
-    }
 
     public void addCertificate(Certificate certificate) {
         certificates.add(certificate);
     }
 
-    public boolean isAdmin() {
-        return roles.contains(Role.ADMIN.getDescription());
-    }
-
-    public boolean hasRole(String role) {
-        return roles.contains(role);
+    public void addTicket(Ticket ticket) {
+        tickets.add(ticket);
     }
 
     public void addStartedCourse(Course course) {
@@ -94,6 +89,23 @@ public class User {
     public void addCompletedCourse(Course course) {
         startedCourses.remove(course);
         completedCourses.add(course);
+    }
+
+    public User(String username, String password, String firstName, String lastName, String email, @NonNull Set<String> roles) {
+        this.username = username;
+        this.password = password;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.roles = roles;
+    }
+
+    public boolean isAdmin() {
+        return roles.contains(Role.ADMIN.getDescription());
+    }
+
+    public boolean hasRole(String role) {
+        return roles.contains(role);
     }
 }
 
