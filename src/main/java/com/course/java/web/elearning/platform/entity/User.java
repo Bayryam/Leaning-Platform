@@ -13,7 +13,7 @@ import java.util.Set;
 @NoArgsConstructor(force = true)
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = {"courses", "startedCourses", "completedCourses", "tickets", "completedLessons", "certificates"})
+@ToString(exclude = {"groups", "courses", "startedCourses", "completedCourses", "tickets", "completedLessons", "certificates"})
 public class User {
 
     public static final String ROLE_STUDENT = "STUDENT";
@@ -47,6 +47,9 @@ public class User {
     public String getFullName() {
         return firstName + " " + lastName;
     }
+
+    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
+    private Set<Group> groups;
 
     @OneToMany
     private Set<Course> courses;
