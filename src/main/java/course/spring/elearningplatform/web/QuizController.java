@@ -83,8 +83,8 @@ public class QuizController {
     @PostMapping("submit")
     public ResponseEntity<Map<String, Integer>> submitQuiz(@RequestParam("courseId") long courseId, @RequestParam("quizId") long quizId, @RequestBody
     QuizSubmissionRequest submission, @AuthenticationPrincipal CustomUserDetails userDetails) {
-        List<Response> answers = submission.getAnswers();
-        long elapsedTime = submission.getElapsedTime();
+        List<Response> answers = submission.answers();
+        long elapsedTime = submission.elapsedTime();
         activityLogService.logActivity("Quiz submitted", userDetails.getUsername());
         return quizzesService.calculateQuizResult(courseId, quizId, answers, elapsedTime);
     }
