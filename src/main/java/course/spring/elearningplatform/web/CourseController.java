@@ -5,7 +5,7 @@ import course.spring.elearningplatform.dto.CourseDto;
 import course.spring.elearningplatform.dto.LessonDto;
 import course.spring.elearningplatform.dto.mapper.EntityMapper;
 import course.spring.elearningplatform.entity.Course;
-import course.spring.elearningplatform.entity.CustomUserDetails;
+import course.spring.elearningplatform.config.user.CustomUserDetails;
 import course.spring.elearningplatform.entity.Lesson;
 import course.spring.elearningplatform.entity.User;
 import course.spring.elearningplatform.exception.DuplicatedEntityException;

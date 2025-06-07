@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 
 @Data
 public class ArticleDto {
-
     @NotBlank(message = "Content is required")
     @Size(min = 3, max = 300, message = "Content must be between 3 and 300 characters")
     private String content;

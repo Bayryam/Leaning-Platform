@@ -1,8 +1,7 @@
 package course.spring.elearningplatform.web;
 
-import course.spring.elearningplatform.entity.CustomUserDetails;
+import course.spring.elearningplatform.config.user.CustomUserDetails;
 import course.spring.elearningplatform.entity.Solution;
-import course.spring.elearningplatform.repository.SolutionRepository;
 import course.spring.elearningplatform.service.ActivityLogService;
 import course.spring.elearningplatform.service.SolutionService;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,4 +1,4 @@
-package course.spring.elearningplatform.config;
+package course.spring.elearningplatform.config.user;
 
 import course.spring.elearningplatform.service.UserService;
 import course.spring.elearningplatform.service.impl.CustomUserDetailsService;

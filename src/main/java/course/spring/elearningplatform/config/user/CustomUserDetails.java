@@ -1,5 +1,6 @@
-package course.spring.elearningplatform.entity;
+package course.spring.elearningplatform.config.user;
 
+import course.spring.elearningplatform.entity.User;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

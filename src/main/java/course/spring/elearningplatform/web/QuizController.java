@@ -1,6 +1,7 @@
 package course.spring.elearningplatform.web;
 
-import course.spring.elearningplatform.dto.QuizSubmissionRequest;
+import course.spring.elearningplatform.config.user.CustomUserDetails;
+import course.spring.elearningplatform.web.data.QuizSubmissionRequest;
 import course.spring.elearningplatform.entity.*;
 import course.spring.elearningplatform.service.ActivityLogService;
 import course.spring.elearningplatform.service.CourseService;

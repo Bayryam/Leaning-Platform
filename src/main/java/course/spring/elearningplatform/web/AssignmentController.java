@@ -1,9 +1,9 @@
 package course.spring.elearningplatform.web;
 
+import course.spring.elearningplatform.config.user.CustomUserDetails;
 import course.spring.elearningplatform.dto.AssignmentDto;
 import course.spring.elearningplatform.entity.*;
 import course.spring.elearningplatform.service.*;
-import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;

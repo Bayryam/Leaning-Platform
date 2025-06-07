@@ -1,6 +1,6 @@
 package course.spring.elearningplatform.web;
 
-import course.spring.elearningplatform.entity.CustomUserDetails;
+import course.spring.elearningplatform.config.user.CustomUserDetails;
 import course.spring.elearningplatform.entity.News;
 import course.spring.elearningplatform.repository.NewsRepository;
 import course.spring.elearningplatform.service.ActivityLogService;

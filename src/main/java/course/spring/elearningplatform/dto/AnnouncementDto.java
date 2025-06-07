@@ -17,5 +17,4 @@ public class AnnouncementDto {
   @NotBlank(message = "Expiry date is required")
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private LocalDateTime expiresAt;
-
 }

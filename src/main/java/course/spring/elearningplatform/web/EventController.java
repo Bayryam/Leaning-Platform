@@ -2,7 +2,7 @@ package course.spring.elearningplatform.web;
 
 import course.spring.elearningplatform.dto.EventDto;
 import course.spring.elearningplatform.dto.mapper.EntityMapper;
-import course.spring.elearningplatform.entity.CustomUserDetails;
+import course.spring.elearningplatform.config.user.CustomUserDetails;
 import course.spring.elearningplatform.entity.Event;
 import course.spring.elearningplatform.service.ActivityLogService;
 import course.spring.elearningplatform.service.impl.EventServiceImpl;

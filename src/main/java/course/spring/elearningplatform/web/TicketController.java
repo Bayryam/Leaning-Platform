@@ -1,13 +1,12 @@
 package course.spring.elearningplatform.web;
 
 import course.spring.elearningplatform.dto.TicketDto;
-import course.spring.elearningplatform.entity.CustomUserDetails;
+import course.spring.elearningplatform.config.user.CustomUserDetails;
 import course.spring.elearningplatform.entity.Ticket;
 import course.spring.elearningplatform.entity.User;
 import course.spring.elearningplatform.service.ActivityLogService;
 import course.spring.elearningplatform.service.TicketService;
 import course.spring.elearningplatform.service.UserService;
-import course.spring.elearningplatform.service.impl.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
